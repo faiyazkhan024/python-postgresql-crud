@@ -86,9 +86,9 @@ async def home(request: Request) -> Any:
         return HTMLResponse("<h1>Templates directory not found</h1>", status_code=500)
 
     return templates.TemplateResponse(
-        "index.html",
-        {
-            "request": request,
+        request=request,
+        name="index.html",
+        context={
             "app_name": settings.APP_NAME,
             "version": settings.APP_VERSION,
             "popular_hobbies": POPULAR_HOBBIES,
