@@ -9,7 +9,7 @@ This document serves as the primary technical specification, operational guide, 
 ## 1. Project Overview & Mission
 
 - **Project Name:** `python-postgresql-crud`
-- **Description:** A simple, high-performance, and modular CRUD (Create, Read, Update, Delete) application built in Python 3.13+ interfacing with PostgreSQL.
+- **Description:** A production-grade, full-stack CRUD application built with Python 3.13, FastAPI, and PostgreSQL. Features form submission (Name, Mobile, Email, Hobbies, Gender, Date of Birth, Bio, Location), live search, sorting, filtering, automated schema migrations, and Docker Compose orchestration.
 - **Package & Dependency Manager:** [`uv`](https://docs.astral.sh/uv/) by Astral.
 - **Repository URL:** `git@github.com:faiyazkhan024/python-postgresql-crud.git`
 - **Default Branch:** `main`
@@ -21,20 +21,21 @@ This document serves as the primary technical specification, operational guide, 
 | Component | Technology | Description |
 |---|---|---|
 | **Language** | Python 3.13+ | Modern Python with standard type hinting |
-| **Database** | PostgreSQL 16+ | Relational database storage |
-| **Driver** | `psycopg` (v3) | Modern PostgreSQL DBAPI driver with connection pooling |
-| **Validation** | `pydantic` (v2) | Schema validation and data modeling |
-| **Config** | `python-dotenv` | Twelve-factor configuration via `.env` files |
-| **Package Manager** | `uv` | Ultra-fast Python package and project manager |
-| **Linter / Formatter**| `ruff` | Fast, unified linter and formatter |
-| **Testing** | `pytest` | Test runner and assertion library |
-| **Containerization** | `docker-compose` | Local containerized PostgreSQL instance |
+| **Framework** | FastAPI | High-performance asynchronous REST API framework |
+| **Server** | Uvicorn | ASGI web server implementation |
+| **Database** | PostgreSQL 16+ | Relational database with GIN indexing for array queries |
+| **Driver & Pooling**| `psycopg` (v3) + `psycopg-pool` | Modern DBAPI driver with connection pooling |
+| **Validation** | Pydantic v2 | Strict schema validation and data parsing |
+| **Templates** | Jinja2 | Server-side rendered template layout |
+| **Frontend UI** | Tailwind CSS + Vanilla JS | Responsive modern UI with dark mode and toasts |
+| **Package Manager**| `uv` | Ultra-fast package and project manager |
+| **Linter / Formatter**| `ruff` | Fast Python linter and formatter |
+| **Testing** | `pytest` + `httpx` | Unit and integration test suite |
+| **Containerization**| Docker & Docker Compose | Multi-container setup (PostgreSQL + FastAPI Web) |
 
 ---
 
 ## 3. Repository Architecture & Layout
-
-When implementing or extending features, adhere to the layered architecture pattern:
 
 ```
 python-postgresql-crud/
@@ -45,20 +46,35 @@ python-postgresql-crud/
 │   └── python_postgresql_crud/
 │       ├── __init__.py          # Package entry point
 │       ├── config.py            # Environment configuration & settings
-│       ├── database.py          # PostgreSQL connection & pool management
-│       ├── models.py            # Pydantic data models / entities
+│       ├── database.py          # PostgreSQL connection pool & schema migrations
+│       ├── models.py            # Pydantic data models & validation schemas
 │       ├── repository.py        # Database CRUD queries (Data Access Layer)
-│       └── service.py           # Business logic & orchestration
+│       ├── service.py           # Business logic, CSV export, sample data seeder
+│       ├── main.py              # FastAPI application, lifespan, routes & UI
+│       ├── api/
+│       │   ├── __init__.py
+│       │   └── routes.py        # REST API endpoints (/api/v1/users)
+│       ├── templates/
+│       │   ├── base.html        # Base HTML with Tailwind CSS, navbar & toast
+│       │   └── index.html       # Dashboard, metrics, table, modals
+│       └── static/
+│           ├── css/
+│           │   └── styles.css   # Custom styling, animations, scrollbars
+│           └── js/
+│               └── app.js       # Frontend controller (fetch API, live search, modals)
 ├── tests/
 │   ├── __init__.py
 │   ├── test_basic.py            # Smoke tests
-│   └── test_crud.py             # CRUD unit & integration tests
+│   ├── test_models.py           # Pydantic schema validation tests
+│   ├── test_service.py          # Business logic and mock repository tests
+│   └── test_api.py              # FastAPI TestClient endpoint tests
 ├── .env.example                 # Environment variables template
 ├── .gitignore                   # Git ignore patterns
 ├── .python-version              # Pinned Python version (3.13)
 ├── AGENT.md                     # This file (Agent instructions)
 ├── CONTRIBUTING.md              # Contribution guide
-├── docker-compose.yml           # Local PostgreSQL service
+├── Dockerfile                   # Multi-stage production container build
+├── docker-compose.yml           # PostgreSQL + web app services
 ├── LICENSE                      # MIT License
 ├── pyproject.toml               # Project metadata & tool configs
 └── README.md                    # Project documentation
@@ -66,10 +82,12 @@ python-postgresql-crud/
 
 ### Architectural Principles
 1. **Config Layer (`config.py`)**: Loads settings from environment variables or `.env`. No other module should directly read `os.environ`.
-2. **Database Layer (`database.py`)**: Manages connection pooling, lifecycle, and provides context managers for acquiring connections and transactions.
-3. **Model Layer (`models.py`)**: Clean data models representing domain entities and request/response payloads.
-4. **Repository Layer (`repository.py`)**: Responsible exclusively for SQL interactions (CRUD). Contains raw SQL with parameterized queries.
-5. **Service Layer (`service.py`)**: Orchestrates operations, enforces business rules, and communicates with the repository.
+2. **Database Layer (`database.py`)**: Manages connection pooling, lifecycle, and provides context managers for acquiring connections and transactions. Applies DDL migration on startup.
+3. **Model Layer (`models.py`)**: Clean data models representing domain entities and request/response payloads with field sanitization.
+4. **Repository Layer (`repository.py`)**: Responsible exclusively for SQL interactions (CRUD). Uses parameterized queries to prevent SQL injection.
+5. **Service Layer (`service.py`)**: Enforces uniqueness constraints (email, mobile), business rules, CSV export formatting, and seed data generation.
+6. **API Layer (`api/routes.py`)**: Exposes RESTful endpoints conforming to HTTP status conventions.
+7. **Presentation Layer (`templates/` & `static/`)**: Clean responsive interface rendered via Jinja2 with modern Tailwind CSS and asynchronous JavaScript fetch calls.
 
 ---
 
@@ -88,89 +106,43 @@ python-postgresql-crud/
 ### Transaction Management
 - Always use context managers to handle connections and transactions:
   ```python
-  with db_pool.connection() as conn:
-      with conn.cursor() as cur:
-          cur.execute("INSERT INTO users (name, email) VALUES (%s, %s)", (name, email))
-      conn.commit()
+  with db.cursor() as cur:
+      cur.execute("INSERT INTO users (name, email) VALUES (%s, %s)", (name, email))
   ```
-- Roll back automatically on unhandled exceptions to maintain database consistency.
-
-### Connection Pooling
-- Prefer connection pooling (`psycopg_pool.ConnectionPool`) over opening and closing a new TCP socket per query.
-- Configure pool min/max sizes via environment variables (`DB_POOL_MIN_SIZE`, `DB_POOL_MAX_SIZE`).
 
 ---
 
 ## 5. Development & Tooling Commands
 
-All commands should be executed through `uv`. Do not invoke `pip` or global Python executables directly.
+All commands should be executed through `uv`.
 
-### Dependency Management
 ```bash
-# Sync dependencies with lockfile
-uv sync
+# Sync dependencies
+uv sync --all-extras --dev
 
-# Add a production dependency
-uv add <package_name>
-
-# Add a development dependency
-uv add --dev <package_name>
-```
-
-### Running the Application
-```bash
-# Run the package script
+# Run application locally
 uv run python-postgresql-crud
-```
 
-### Code Formatting & Linting
-```bash
 # Format code
 uv run ruff format .
 
-# Check and auto-fix linter issues
+# Check and fix lint issues
 uv run ruff check . --fix
-```
 
-### Running Tests
-```bash
-# Run all tests
+# Run tests
 uv run pytest -v
 
-# Run tests with output printing
-uv run pytest -s
-```
-
-### Local Database with Docker
-```bash
-# Start PostgreSQL in background
-docker compose up -d
-
-# Stop PostgreSQL
-docker compose down
-
-# View database logs
-docker compose logs -f postgres
+# Run full stack with Docker Compose
+docker compose up --build
 ```
 
 ---
 
-## 6. Code Style & Engineering Standards
+## 6. Instructions for Autonomous AI Agents
 
-- **Python Version:** 3.13 syntax. Use modern union types (`int | None` instead of `Optional[int]`), standard collection types (`list[str]`, `dict[str, Any]`), and pattern matching where applicable.
-- **Type Annotations:** All function parameters, return values, and module constants must be typed.
-- **Error Handling:** Catch specific exceptions (`psycopg.Error`, `KeyError`, `ValueError`). Never write bare `except:`. Provide actionable error context.
-- **Logging:** Use Python's built-in `logging` module rather than scattered `print()` statements in production code.
-
----
-
-## 7. Instructions for Autonomous AI Agents
-
-When tasked with modifications or feature implementations:
-1. **Understand Context:** Inspect `pyproject.toml`, existing source code in `src/`, and existing tests before creating or changing files.
-2. **Preserve Documentation:** Do not delete existing comments or documentation unless explicitly obsolete or requested.
+1. **Understand Context:** Inspect `models.py`, `repository.py`, and `service.py` before modifying any domain rules.
+2. **Preserve Documentation:** Keep comments and docstrings intact.
 3. **Verify Working State:**
    - Run `uv run ruff check .` and ensure no lint warnings remain.
-   - Run `uv run ruff format .` to keep styling consistent.
    - Run `uv run pytest` to ensure all tests pass.
 4. **Atomic Git Commits:** Keep changes cohesive and accompanied by clear commit messages following Conventional Commits (`feat:`, `fix:`, `docs:`, `test:`, `refactor:`).
