@@ -95,7 +95,7 @@ def list_users(
     ),
     sort_order: str = Query(
         default="desc",
-        regex="^(asc|desc)$",
+        pattern="^(asc|desc)$",
         description="Sort direction (asc or desc)",
     ),
 ) -> PaginatedUsersResponse:
