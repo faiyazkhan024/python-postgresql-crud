@@ -17,12 +17,12 @@ ENV UV_COMPILE_BYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
 # Copy dependency definition files first for optimal layer caching
-COPY pyproject.toml README.md ./
+COPY pyproject.toml README.md uv.lock* ./
 
 # Install project dependencies into virtual environment
-RUN uv sync --frozen --no-dev --no-install-project 2>/dev/null || uv sync --no-dev --no-install-project
+RUN uv sync --no-dev --no-install-project
 
-# Copy application source code
+# Copy application source code and tests
 COPY src ./src
 COPY tests ./tests
 
