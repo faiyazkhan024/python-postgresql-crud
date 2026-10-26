@@ -1,0 +1,554 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="space-y-8">
+
+  <!-- Hero Header & Stats Grid -->
+  <div class="space-y-6">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div>
+        <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+          User Management Directory
+        </h1>
+        <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">
+          Complete CRUD application with form validation, PostgreSQL indexing, and live search.
+        </p>
+      </div>
+
+      <!-- Quick Action Buttons -->
+      <div class="flex flex-wrap items-center gap-2.5">
+        <button id="btn-seed-data" class="inline-flex items-center px-3.5 py-2 text-xs font-semibold rounded-xl text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm hover:bg-slate-50 dark:hover:bg-slate-700 transition">
+          <svg class="w-4 h-4 mr-1.5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+          </svg>
+          Seed Sample Data
+        </button>
+
+        <a id="btn-export-csv" href="/api/v1/users/export/csv" download class="inline-flex items-center px-3.5 py-2 text-xs font-semibold rounded-xl text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm hover:bg-slate-50 dark:hover:bg-slate-700 transition">
+          <svg class="w-4 h-4 mr-1.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+          </svg>
+          Export CSV
+        </a>
+
+        <button id="btn-open-create-modal" class="inline-flex items-center px-4 py-2 text-xs font-bold rounded-xl text-white bg-indigo-600 hover:bg-indigo-700 shadow-sm shadow-indigo-500/25 transition">
+          <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+          </svg>
+          Add New User
+        </button>
+      </div>
+    </div>
+
+    <!-- Metrics Cards -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <!-- Total Users -->
+      <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-5 rounded-2xl shadow-sm">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Total Users</span>
+          <div class="p-2 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+            </svg>
+          </div>
+        </div>
+        <div class="mt-3">
+          <div id="stat-total-users" class="text-2xl font-black text-slate-900 dark:text-white">0</div>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Registered in PostgreSQL</p>
+        </div>
+      </div>
+
+      <!-- Active Users -->
+      <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-5 rounded-2xl shadow-sm">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Active Profiles</span>
+          <div class="p-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+        </div>
+        <div class="mt-3">
+          <div id="stat-active-users" class="text-2xl font-black text-slate-900 dark:text-white">0</div>
+          <p id="stat-active-percent" class="text-xs text-emerald-600 dark:text-emerald-400 font-medium mt-0.5">0% active rate</p>
+        </div>
+      </div>
+
+      <!-- Top Hobby -->
+      <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-5 rounded-2xl shadow-sm">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Top Hobby</span>
+          <div class="p-2 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+            </svg>
+          </div>
+        </div>
+        <div class="mt-3">
+          <div id="stat-top-hobby" class="text-xl font-bold text-slate-900 dark:text-white truncate">None yet</div>
+          <p id="stat-top-hobby-count" class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Most common interest</p>
+        </div>
+      </div>
+
+      <!-- Recent Signups -->
+      <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-5 rounded-2xl shadow-sm">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Recent Users</span>
+          <div class="p-2 rounded-xl bg-violet-50 dark:bg-violet-950/60 text-violet-600 dark:text-violet-400">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+        </div>
+        <div class="mt-3">
+          <div id="stat-recent-users" class="text-2xl font-black text-slate-900 dark:text-white">0</div>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Joined past 7 days</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Search, Filter & Action Toolbar -->
+  <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-4 rounded-2xl shadow-sm space-y-4">
+    <div class="grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
+      
+      <!-- Live Search Input (Span 5) -->
+      <div class="md:col-span-5 relative">
+        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+        </div>
+        <input 
+          type="text" 
+          id="filter-search" 
+          placeholder="Search by name, email, mobile, or city..." 
+          class="w-full pl-10 pr-9 py-2 text-sm rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
+        >
+        <button id="btn-clear-search" class="hidden absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <!-- Hobby Filter (Span 3) -->
+      <div class="md:col-span-3">
+        <select id="filter-hobby" class="w-full py-2 px-3 text-sm rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          <option value="">All Hobbies</option>
+          {% for hobby in popular_hobbies %}
+          <option value="{{ hobby }}">{{ hobby }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- Gender Filter (Span 2) -->
+      <div class="md:col-span-2">
+        <select id="filter-gender" class="w-full py-2 px-3 text-sm rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          <option value="">All Genders</option>
+          <option value="male">Male</option>
+          <option value="female">Female</option>
+          <option value="non_binary">Non-Binary</option>
+          <option value="other">Other</option>
+          <option value="prefer_not_to_say">Prefer Not To Say</option>
+        </select>
+      </div>
+
+      <!-- Status Filter (Span 2) -->
+      <div class="md:col-span-2">
+        <select id="filter-status" class="w-full py-2 px-3 text-sm rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          <option value="">All Statuses</option>
+          <option value="true">Active Only</option>
+          <option value="false">Inactive Only</option>
+        </select>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Users Data Table Container -->
+  <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden flex flex-col">
+    <div class="overflow-x-auto flex-1">
+      <table class="w-full text-left border-collapse">
+        <thead>
+          <tr class="border-b border-slate-200 dark:border-slate-800 bg-slate-50/75 dark:bg-slate-800/50 text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 select-none">
+            <th class="py-3.5 pl-6 pr-3 cursor-pointer hover:text-indigo-600 dark:hover:text-indigo-400" data-sort="name">
+              <div class="flex items-center space-x-1">
+                <span>User</span>
+                <span class="sort-icon text-slate-300 dark:text-slate-600">&updownarrow;</span>
+              </div>
+            </th>
+            <th class="py-3.5 px-3">Contact</th>
+            <th class="py-3.5 px-3">Hobbies & Interests</th>
+            <th class="py-3.5 px-3">Location</th>
+            <th class="py-3.5 px-3">Status</th>
+            <th class="py-3.5 px-3 cursor-pointer hover:text-indigo-600 dark:hover:text-indigo-400" data-sort="created_at">
+              <div class="flex items-center space-x-1">
+                <span>Created</span>
+                <span class="sort-icon text-slate-300 dark:text-slate-600">&updownarrow;</span>
+              </div>
+            </th>
+            <th class="py-3.5 pl-3 pr-6 text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="users-table-body" class="divide-y divide-slate-100 dark:divide-slate-800/80 text-sm">
+          <!-- Dynamic JS rendering rows here -->
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Empty State Container -->
+    <div id="empty-state" class="hidden py-16 px-4 text-center">
+      <div class="w-16 h-16 mx-auto rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400">
+        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+        </svg>
+      </div>
+      <h3 class="mt-4 text-base font-bold text-slate-900 dark:text-white">No users found</h3>
+      <p class="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto mt-1">
+        Try adjusting your search criteria, or add a new user or seed sample profiles.
+      </p>
+      <div class="mt-5 flex items-center justify-center gap-3">
+        <button onclick="document.getElementById('btn-open-create-modal').click()" class="inline-flex items-center px-4 py-2 text-xs font-semibold rounded-xl text-white bg-indigo-600 hover:bg-indigo-700 transition">
+          + Add First User
+        </button>
+        <button onclick="document.getElementById('btn-seed-data').click()" class="inline-flex items-center px-4 py-2 text-xs font-semibold rounded-xl text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 transition">
+          Seed Sample Data
+        </button>
+      </div>
+    </div>
+
+    <!-- Table Pagination Footer -->
+    <div id="pagination-container" class="border-t border-slate-200 dark:border-slate-800 px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500 dark:text-slate-400 bg-slate-50/50 dark:bg-slate-900/50">
+      <div>
+        Showing <span id="pagination-start" class="font-semibold text-slate-800 dark:text-slate-200">0</span> to <span id="pagination-end" class="font-semibold text-slate-800 dark:text-slate-200">0</span> of <span id="pagination-total" class="font-semibold text-slate-800 dark:text-slate-200">0</span> users
+      </div>
+
+      <div class="flex items-center space-x-2">
+        <button id="btn-prev-page" class="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-medium hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition">
+          Previous
+        </button>
+        <div id="pagination-page-numbers" class="flex items-center space-x-1"></div>
+        <button id="btn-next-page" class="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-medium hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition">
+          Next
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ===================================================================== -->
+<!-- MODAL 1: Create / Edit User Modal                                     -->
+<!-- ===================================================================== -->
+<div id="user-modal" class="fixed inset-0 z-50 hidden overflow-y-auto bg-slate-950/60 backdrop-blur-sm flex items-center justify-center p-4">
+  <div class="relative w-full max-w-2xl bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden transform transition-all my-8">
+    
+    <!-- Modal Header -->
+    <div class="flex items-center justify-between px-6 py-5 border-b border-slate-200 dark:border-slate-800 bg-slate-50/75 dark:bg-slate-850">
+      <div>
+        <h2 id="modal-title" class="text-lg font-bold text-slate-900 dark:text-white">Submit User Profile</h2>
+        <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Fill in the fields below. Name, mobile, and email are strictly validated.</p>
+      </div>
+      <button id="btn-close-modal" class="p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+
+    <!-- Form Content -->
+    <form id="user-form" class="p-6 space-y-5">
+      <input type="hidden" id="form-user-id" value="">
+
+      <!-- Row 1: Name & Email -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label for="form-name" class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+            Full Name <span class="text-rose-500">*</span>
+          </label>
+          <input 
+            type="text" 
+            id="form-name" 
+            required 
+            placeholder="e.g. Faiyaz Khan" 
+            class="w-full px-3.5 py-2 text-sm rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          >
+        </div>
+
+        <div>
+          <label for="form-email" class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+            Email Address <span class="text-rose-500">*</span>
+          </label>
+          <input 
+            type="email" 
+            id="form-email" 
+            required 
+            placeholder="e.g. faiyaz@example.com" 
+            class="w-full px-3.5 py-2 text-sm rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          >
+        </div>
+      </div>
+
+      <!-- Row 2: Mobile & Gender -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label for="form-mobile" class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+            Mobile Number <span class="text-rose-500">*</span>
+          </label>
+          <input 
+            type="tel" 
+            id="form-mobile" 
+            required 
+            placeholder="e.g. +919876543210" 
+            class="w-full px-3.5 py-2 text-sm rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          >
+          <p class="text-[10px] text-slate-400 mt-1">Include country code or 10-digit number</p>
+        </div>
+
+        <div>
+          <label for="form-gender" class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+            Gender
+          </label>
+          <select id="form-gender" class="w-full px-3.5 py-2 text-sm rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            <option value="prefer_not_to_say">Prefer Not To Say</option>
+            <option value="male">Male</option>
+            <option value="female">Female</option>
+            <option value="non_binary">Non-Binary</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Row 3: Hobbies (Tag/Chip selection) -->
+      <div>
+        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+          Hobbies & Interests
+        </label>
+        
+        <!-- Popular chips for quick toggle -->
+        <div class="flex flex-wrap gap-1.5 mb-2.5">
+          {% for hobby in popular_hobbies %}
+          <button 
+            type="button" 
+            class="hobby-pill text-xs px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:border-indigo-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition"
+            data-hobby="{{ hobby }}"
+          >
+            + {{ hobby }}
+          </button>
+          {% endfor %}
+        </div>
+
+        <!-- Custom Hobby input & Tag container -->
+        <div id="hobbies-tags-container" class="min-h-[42px] p-2 flex flex-wrap items-center gap-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
+          <input 
+            type="text" 
+            id="form-hobby-input" 
+            placeholder="Type custom hobby and press Enter..." 
+            class="flex-1 min-w-[180px] bg-transparent text-sm text-slate-900 dark:text-white focus:outline-none px-1"
+          >
+        </div>
+      </div>
+
+      <!-- Row 4: Date of Birth, City, Country -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div>
+          <label for="form-dob" class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+            Date of Birth
+          </label>
+          <input 
+            type="date" 
+            id="form-dob" 
+            class="w-full px-3.5 py-2 text-sm rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          >
+        </div>
+
+        <div>
+          <label for="form-city" class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+            City
+          </label>
+          <input 
+            type="text" 
+            id="form-city" 
+            placeholder="e.g. Bengaluru" 
+            class="w-full px-3.5 py-2 text-sm rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          >
+        </div>
+
+        <div>
+          <label for="form-country" class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+            Country
+          </label>
+          <input 
+            type="text" 
+            id="form-country" 
+            value="India" 
+            class="w-full px-3.5 py-2 text-sm rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          >
+        </div>
+      </div>
+
+      <!-- Row 5: Bio -->
+      <div>
+        <label for="form-bio" class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+          Biography / Notes
+        </label>
+        <textarea 
+          id="form-bio" 
+          rows="2" 
+          placeholder="Brief introduction or background..." 
+          class="w-full px-3.5 py-2 text-sm rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+        ></textarea>
+      </div>
+
+      <!-- Row 6: Active Status Checkbox -->
+      <div class="flex items-center space-x-2.5 pt-1">
+        <input 
+          type="checkbox" 
+          id="form-is-active" 
+          checked 
+          class="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 border-slate-300 dark:border-slate-700 dark:bg-slate-800"
+        >
+        <label for="form-is-active" class="text-xs font-medium text-slate-700 dark:text-slate-300 select-none">
+          Active User Profile
+        </label>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="pt-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end space-x-3">
+        <button 
+          type="button" 
+          id="btn-cancel-modal" 
+          class="px-4 py-2 text-xs font-semibold rounded-xl text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition"
+        >
+          Cancel
+        </button>
+        <button 
+          type="submit" 
+          id="btn-save-user" 
+          class="inline-flex items-center px-5 py-2 text-xs font-bold rounded-xl text-white bg-indigo-600 hover:bg-indigo-700 shadow-sm shadow-indigo-500/25 transition disabled:opacity-50"
+        >
+          <span id="btn-save-spinner" class="hidden mr-2">
+            <svg class="animate-spin w-3.5 h-3.5" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+            </svg>
+          </span>
+          <span id="btn-save-text">Save Profile</span>
+        </button>
+      </div>
+    </form>
+
+  </div>
+</div>
+
+<!-- ===================================================================== -->
+<!-- MODAL 2: View User Details Modal                                      -->
+<!-- ===================================================================== -->
+<div id="view-modal" class="fixed inset-0 z-50 hidden overflow-y-auto bg-slate-950/60 backdrop-blur-sm flex items-center justify-center p-4">
+  <div class="relative w-full max-w-lg bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden transform transition-all my-8">
+    <div class="p-6 space-y-6">
+      
+      <!-- User Profile Header -->
+      <div class="flex items-start justify-between">
+        <div class="flex items-center space-x-4">
+          <div id="view-avatar" class="w-16 h-16 rounded-2xl flex items-center justify-center text-xl font-extrabold text-white bg-gradient-to-tr from-indigo-500 to-violet-500 shadow-md">
+            U
+          </div>
+          <div>
+            <div class="flex items-center space-x-2">
+              <h3 id="view-name" class="text-xl font-bold text-slate-900 dark:text-white"></h3>
+              <span id="view-status-badge"></span>
+            </div>
+            <p id="view-email" class="text-xs text-slate-500 dark:text-slate-400 mt-0.5"></p>
+          </div>
+        </div>
+
+        <button id="btn-close-view-modal" class="p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-white transition">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <!-- Details Grid -->
+      <div class="grid grid-cols-2 gap-4 text-xs bg-slate-50 dark:bg-slate-850 p-4 rounded-2xl">
+        <div>
+          <span class="text-slate-400 font-medium">Mobile Phone</span>
+          <p id="view-mobile" class="font-semibold text-slate-800 dark:text-slate-200 mt-0.5"></p>
+        </div>
+        <div>
+          <span class="text-slate-400 font-medium">Gender</span>
+          <p id="view-gender" class="font-semibold text-slate-800 dark:text-slate-200 capitalize mt-0.5"></p>
+        </div>
+        <div>
+          <span class="text-slate-400 font-medium">Date of Birth</span>
+          <p id="view-dob" class="font-semibold text-slate-800 dark:text-slate-200 mt-0.5"></p>
+        </div>
+        <div>
+          <span class="text-slate-400 font-medium">Location</span>
+          <p id="view-location" class="font-semibold text-slate-800 dark:text-slate-200 mt-0.5"></p>
+        </div>
+      </div>
+
+      <!-- Hobbies -->
+      <div>
+        <h4 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Hobbies & Interests</h4>
+        <div id="view-hobbies" class="flex flex-wrap gap-1.5"></div>
+      </div>
+
+      <!-- Biography -->
+      <div>
+        <h4 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Biography</h4>
+        <p id="view-bio" class="text-xs text-slate-600 dark:text-slate-300 bg-slate-50/50 dark:bg-slate-800 p-3.5 rounded-xl border border-slate-100 dark:border-slate-800 italic leading-relaxed"></p>
+      </div>
+
+      <!-- Timestamps -->
+      <div class="flex items-center justify-between text-[11px] text-slate-400 pt-2 border-t border-slate-100 dark:border-slate-800">
+        <span>Registered: <span id="view-created-at" class="font-medium"></span></span>
+        <span>Updated: <span id="view-updated-at" class="font-medium"></span></span>
+      </div>
+
+      <!-- Footer Buttons -->
+      <div class="flex items-center justify-end space-x-2.5 pt-2">
+        <button id="btn-view-edit" class="inline-flex items-center px-4 py-2 text-xs font-semibold rounded-xl text-white bg-indigo-600 hover:bg-indigo-700 transition">
+          Edit Profile
+        </button>
+        <button id="btn-view-close" class="px-4 py-2 text-xs font-semibold rounded-xl text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 transition">
+          Close
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ===================================================================== -->
+<!-- MODAL 3: Delete Confirmation Modal                                    -->
+<!-- ===================================================================== -->
+<div id="delete-modal" class="fixed inset-0 z-50 hidden overflow-y-auto bg-slate-950/60 backdrop-blur-sm flex items-center justify-center p-4">
+  <div class="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 p-6 text-center transform transition-all">
+    <div class="w-14 h-14 mx-auto rounded-2xl bg-rose-50 dark:bg-rose-950/50 text-rose-500 flex items-center justify-center mb-4">
+      <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+      </svg>
+    </div>
+
+    <h3 class="text-lg font-bold text-slate-900 dark:text-white">Delete User Profile</h3>
+    <p class="text-xs text-slate-500 dark:text-slate-400 mt-2">
+      Are you sure you want to remove <span id="delete-user-name" class="font-bold text-slate-800 dark:text-slate-200"></span>?
+      This action cannot be undone.
+    </p>
+
+    <div class="mt-6 flex items-center justify-center space-x-3">
+      <button id="btn-cancel-delete" class="px-4 py-2 text-xs font-semibold rounded-xl text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 transition">
+        Cancel
+      </button>
+      <button id="btn-confirm-delete" class="px-5 py-2 text-xs font-bold rounded-xl text-white bg-rose-600 hover:bg-rose-700 shadow-sm shadow-rose-500/25 transition">
+        Yes, Delete
+      </button>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

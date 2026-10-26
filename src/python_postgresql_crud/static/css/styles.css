@@ -1,0 +1,71 @@
+/* Custom styles and enhancements for User Management CRUD */
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.3);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.5);
+}
+
+/* Toast Animations */
+@keyframes toastSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes toastFadeOut {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(10px) scale(0.95);
+  }
+}
+
+.toast-enter {
+  animation: toastSlideIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.toast-leave {
+  animation: toastFadeOut 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Hobby pill active state */
+.hobby-pill.active {
+  background-color: #4f46e5 !important;
+  color: #ffffff !important;
+  border-color: #4f46e5 !important;
+}
+
+/* Smooth modal backdrop transition */
+#user-modal, #view-modal, #delete-modal {
+  transition: opacity 0.2s ease-in-out;
+}
+
+/* Avatar badge color gradients */
+.avatar-gradient-0 { background: linear-gradient(135deg, #6366f1, #a855f7); }
+.avatar-gradient-1 { background: linear-gradient(135deg, #3b82f6, #06b6d4); }
+.avatar-gradient-2 { background: linear-gradient(135deg, #10b981, #14b8a6); }
+.avatar-gradient-3 { background: linear-gradient(135deg, #f59e0b, #f97316); }
+.avatar-gradient-4 { background: linear-gradient(135deg, #ec4899, #f43f5e); }
+.avatar-gradient-5 { background: linear-gradient(135deg, #8b5cf6, #d946ef); }
